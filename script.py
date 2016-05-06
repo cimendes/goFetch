@@ -7,9 +7,11 @@ input:  gene_presence_absence.csv file from roary
 output: txt file with geneId to be used in DAVID
 '''
 
+import csv
+
 def parseGeneCSVFile(filename):
 	geneGroup={}
-	with open(gene_filename, 'r') as csvfile:
+	with open(filename, 'r') as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
 			geneGroup[row[0]]={}  #initialize dictionary of dictionaries
@@ -21,10 +23,11 @@ def parseGeneCSVFile(filename):
 
 def main():
 
-pa_file='/home/ines/Dropbox/Tese/roary/roary_ines_n61/gene_presence_absence.csv'
+	pa_file='/home/ines/Dropbox/Tese/roary/roary_ines_n61/gene_presence_absence.csv'
 
-dic=parseGeneCSVFile(pa_file)
-print dic
+	dic=parseGeneCSVFile(pa_file)
+	print len(dic)
+	
 
 if __name__ == "__main__":
     main()
