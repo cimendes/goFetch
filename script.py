@@ -24,11 +24,11 @@ def main():
 
 	pa_file='/home/ines/Dropbox/Tese/roary/roary_ines_n61/gene_presence_absence.csv'
 
-	scoary_file = '/Users/cimendes/Dropbox/Tese/Scoary_1.1.2/Horse_05_05_2016_1144.csv exclusive_present.csv'
+	scoary_file = '/home/ines/Dropbox/Tese/Scoary_1.1.2/Horse_05_05_2016_1144.csv exclusive_present.csv'
 	dic_allgenes=parseGeneCSVFile(pa_file)
-	print len(dic)
-	dic_scoary_humans=parseGeneCSVFile(pa_file)
-	print dic_scoary_humans
+	print len(dic_allgenes)
+	dic_scoary_humans=parseGeneCSVFile(scoary_file)
+	print len(dic_scoary_humans)
 
 	
 
