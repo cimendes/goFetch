@@ -27,11 +27,12 @@ def parseGeneCSVFile(filename):
 
 	with open(filename, 'r') as csvfile:
 		reader = csv.reader(csvfile, delimiter=Delimiter)
-		reader.next() #skip header line
+		firstLine=reader.next() #skip header line
+		filenames = firstline[14:]
 		for row in reader:
 			#print row[0]
 			geneGroup[row[0]]=[] #initialize dictionary containing empty list
-	return geneGroup
+	return geneGroup, filenames
 
 def parsePAGeneFile(filename, dic):
 	with open(filename, 'r') as csvfile:
@@ -57,7 +58,7 @@ def main():
 	pa_file='/home/ines/Dropbox/Tese/roary/roary_ines_n61/gene_presence_absence.csv'
 
 	scoary_file = '/home/ines/Dropbox/Tese/Scoary_1.1.2/Horse_05_05_2016_1144.csv exclusive_present.csv'
-	dic_allgenes=parseGeneCSVFile(pa_file)
+	dic_allgenes, filenames=parseGeneCSVFile(pa_file)
 	#print len(dic_allgenes)
 	#print dic_allgenes
 	dic_scoary_set=parseGeneCSVFile(scoary_file)
@@ -74,7 +75,7 @@ def main():
 
 	#print len(all_genes)
 
-
+	print filenames
 	#TODO-parse GFF file (where to save filenames?)
 
 
