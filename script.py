@@ -78,7 +78,7 @@ def cleanFilenames(filenames, dic):
 	return finalList
 
 def removeGeneID(dic, listToRemove):
-
+	#TODO! Verify is it's ok!
 	#remove geneIDs, if groupID is empty, remove that too
 	for k, value in dic.items():
 		for key in value.keys():
@@ -128,17 +128,51 @@ def parseGFFs(gffdir, filenames, dic):
 		for k,v in value.items():
 			print "Gene ID: " + str(k)
 			print v'''
-	print len(dic)
-	newDic=removeGeneID(dic, geneIDtoRemove)
-	print len(newDic)
-
+	#print len(dic)
+	newDic=removeGeneID(dic, geneIDtoRemove) #cleanup!
+	#print len(newDic)
+	'''
 	for key, value in newDic.items():
 		print "group ID: " + str(key)
 		for k,v in value.items():
 			print "Gene ID: " + str(k)
-			print v
-	#return dic, geneIDtoRemove
+			print v'''
+	return newDic
 
+def printFile(dic):
+	#printing 3 files: . gi numbers, ref with version and ref w/o version
+
+	#printing GI:
+	toPrint_Gi=[]
+	for key, value in dic.items():
+		for k,v in value.items():
+			if v[0] not in toPrint_Gi:
+				toPrint_Gi.append(v[0])
+	with open("gi_ids.txt", "w") as fileGI:
+		for item in toPrint_Gi:
+			fileGI.write(str(item) + '\n')
+
+	#printing Ref with version
+	toPrint_Ref=[]
+	for key, value in dic.items():
+		for k,v in value.items():
+			if v[1] not in toPrint_Ref:
+				toPrint_Ref.append(v[1])
+	with open("ref_wVersion.txt", "w") as fileRef_V:
+		for item in toPrint_Ref:
+			fileRef_V.write(str(item)+ '\n')
+
+	#printing Ref without version:
+	toPrint_Ref_noVersion=[]
+	for key, value in dic.items():
+		for k,v in value.items():
+			toprint=v[1].split('.')
+			toprint=toprint[0]
+			if toprint not in toPrint_Ref_noVersion:
+				toPrint_Ref_noVersion.append(toprint)
+	with open("ref_noVersion.txt", "w") as fileRef:
+		for item in toPrint_Ref_noVersion:
+			fileRef.write(str(item) + '\n')
 
 def main():
 
@@ -170,7 +204,11 @@ def main():
 
 	#cleanFilenames(filenames,set_genes)
 
-	parseGFFs(gffdir, filenames, set_genes)
+	set_genes=parseGFFs(gffdir, filenames, set_genes)
+
+	printFile(set_genes)
+
+
 
 
 
