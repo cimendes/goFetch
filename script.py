@@ -5,6 +5,8 @@ input:  gene_presence_absence.csv file from roary
 		scoary output csv file for the genes of interest, otherwise it will perfom 
 		analysis for all group genes in roary csv
 output: txt file with geneId to be used in DAVID
+
+requires: bioservices, internet connection
 '''
 
 import csv
@@ -24,8 +26,7 @@ def parseGeneCSVFile(filename):
 	#Reads csv file with gene information, wither from Roary or Scoary. Gene group id must be in the first col.
 	#Saves gene group ids as key in dictionary.
 	geneGroup={}
-	Delimiter=detectDelimiter(filename)
-
+	Delimiter=detectDelimiter(filename) #detects file delimiter
 	with open(filename, 'r') as csvfile:
 		reader = csv.reader(csvfile, delimiter=Delimiter)
 		reader.next()
@@ -35,15 +36,13 @@ def parseGeneCSVFile(filename):
 
 
 def parsePAGeneFile(filename, dic):
+	#parser for Roary's gene_presence_absence.csv file
 	with open(filename, 'r') as csvfile:
 		reader = csv.reader(csvfile)
-		filenames=reader.next()[14:] #save filenames
+		filenames=reader.next()[14:] #save all filenames
 		for row in reader:
-			#print row[0]
-			#print dic.keys()
 			if row[0] in dic.keys():
-				#geneID starts in the 15 camp
-				#print row[14:]
+				#geneID starts in the 15th col
 				temp_dic={}
 				for item in row[14:]:
 					#check if item is empty, only saves non-empty ids
@@ -55,17 +54,16 @@ def parsePAGeneFile(filename, dic):
 	return dic, filenames
 
 def cleanFilenames(filenames, dic):
-	#not sure if necessary
+	#TODO: not sure if necessary
+	#Cleans not needed filenames
 	fnames=[]
 	for key,value in dic.items():
-		name =value.keys()#
+		name =value.keys()
 		for item in name:
 			fname=item.split('_')
 			fname='_'.join(fname[:-1])
-			#print fname
 			if fname not in fnames:
 				fnames.append(fname)
-	#print fnames
 	finalList=[]
 	for lala in filenames:
 		realName=item.split('_')
@@ -73,28 +71,23 @@ def cleanFilenames(filenames, dic):
 		for name in fnames:
 			if fname == realName and lala not in finalList:
 				finalList.append(lala)
-	#print len(finalList)
-
 	return finalList
 
 def removeGeneID(dic, listToRemove):
 	#TODO! Verify is it's ok!
-	#remove geneIDs, if groupID is empty, remove that too
+	#remove geneIDs, if groupID is empty, removes that too
 	for k, value in dic.items():
 		for key in value.keys():
 			if key in listToRemove:
-				#value.pop(key)
 				del value[key]
 	for k,v in dic.items():
 		if len(v)==0:
 			del dic[k]
-	#print dic
 	return dic
 
 def parseGFFs(gffdir, filenames, dic):
-
+	#parse gff files. Requires directory containing the gff files
 	geneIDtoRemove=[]
-
 	for item in filenames:
 		with open(gffdir+item+'.gff', 'r') as gffFile:
 			for line in gffFile:
@@ -103,25 +96,18 @@ def parseGFFs(gffdir, filenames, dic):
 					line=line[-1].split(';')
 					locusID=str(line[0].split('=')[1])
 					if '_gene' in locusID:
-						#print locusID
 						pass
 					else:
 						try:
 							line=line[2].split('|')
-							#print line
-							#print line
 							gi= line[1]
 							ref=line[3]
-
 							for key, value in dic.items():
 								if locusID in value.keys():
 									value[locusID]=(gi, ref)
-
 						except:
 							#no id found! remove from dic!
 							geneIDtoRemove.append(locusID)
-
-
 	'''
 	for key, value in dic.items():
 		print "group ID: " + str(key)
@@ -174,14 +160,110 @@ def printFile(dic):
 		for item in toPrint_Ref_noVersion:
 			fileRef.write(str(item) + '\n')
 
+def retrieveUniprot(dic):
+	#TODO: improve!
+
+	import urllib,urllib2
+
+	print dic
+
+	toPrint_Gi=[]
+	for key, value in dic.items():
+		for k,v in value.items():
+			if v[0] not in toPrint_Gi:
+				toPrint_Gi.append(v[0])
+
+	url = 'http://www.uniprot.org/mapping/'
+
+	params = {
+	'from':'P_GI',
+	'to':'ACC',
+	'format':'tab',
+	'query':'	'.join(toPrint_Gi)
+	}
+
+	data = urllib.urlencode(params)
+	request = urllib2.Request(url, data)
+	contact = "" # Please set your email address here to help us debug in case of problems.
+	request.add_header('User-Agent', 'Python %s' % contact)
+	response = urllib2.urlopen(request)
+	page = response.read(200000)
+	#print page
+
+	lili=page.split()
+	lala=lili[3::2]
+	#print lala
+
+	params2 = {
+	'from':'UPARC',
+	'to':'ACC',
+	'format':'tab',
+	'query':'	'.join(lala)
+	}
+
+	data2 = urllib.urlencode(params2)
+	request2 = urllib2.Request(url, data2)
+	contact2 = "" # Please set your email address here to help us debug in case of problems.
+	request2.add_header('User-Agent', 'Python %s' % contact2)
+	response2 = urllib2.urlopen(request2)
+	page2 = response2.read(200000)
+	#print page2
+
+	uniprot=page2.split()[3::2] #save as list
+	#print uniprot
+
+	return uniprot
+
+def getGOnumbers(uniprotIDs):
+	#from the uniprot id list, recovers GOids. returns dict with the list of
+	#GO ids for each uniprot id. 
+
+	from bioservices import QuickGO
+	import unicodedata
+
+	s = QuickGO() #init QuickGO
+
+	listOfGOterms={}
+	for item in uniprotIDs:
+		#check frmt as dict - saves as unicode
+		result=s.Annotation(protein=str(item),source="UniProt",frmt='tsv',col="goID,aspect,goName")
+		result= result.encode('ascii','ignore').strip() #convert unicode string to regular str
+		#print result
+		goTerm=result.split('\n')[2:]
+		if len(goTerm)>0:
+			listOfTerms={}
+			for terms in goTerm:
+				terms=terms.split('\t')
+				if terms[1] not in listOfTerms:
+					listOfTerms[terms[1]]=[(terms[0], terms[2])]
+				else:
+					values=listOfTerms[terms[1]]
+					values.append((terms[0], terms[2]))
+					listOfTerms[terms[1]]=values
+		listOfGOterms[item]=listOfTerms
+	'''for k,v in listOfGOterms.items():
+		print 'key: ' + k
+		print v'''
+	return listOfGOterms
+
+
+
+
+
+
+
 def main():
 
+	#TODO: Add argparse!
+
+	#input files
 	pa_file='/home/ines/Dropbox/Tese/roary/roary_ines_n61/gene_presence_absence.csv'
 
 	scoary_file = '/home/ines/Dropbox/Tese/Scoary_1.1.2/Horse_05_05_2016_1144.csv exclusive_present.csv'
 	
 	gffdir='/home/ines/Dropbox/Tese/roary/gff_roary/'
 
+	#parsing 
 	dic_allgenes=parseGeneCSVFile(pa_file)
 	#print len(dic_allgenes)
 	#print dic_allgenes
@@ -204,9 +286,17 @@ def main():
 
 	#cleanFilenames(filenames,set_genes)
 
+	#parse GFFs
 	set_genes=parseGFFs(gffdir, filenames, set_genes)
 
-	printFile(set_genes)
+	#printing files
+	#printFile(set_genes)
+
+	#retrieve uniprotKB ids
+	uniprot=retrieveUniprot(set_genes)
+
+	#retrieve GO terms
+	getGOnumbers(uniprot)
 
 
 
