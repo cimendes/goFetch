@@ -7,6 +7,24 @@ input:  gene_presence_absence.csv file from roary
 output: txt file with geneId to be used in DAVID
 
 requires: bioservices, internet connection
+
+For each genegroup it only saves unique ids
+
+Dictionary Structure:
+	{GeneGroup:
+		-{GeneID:
+			-GI Number
+			-Ref Number
+			-{Uniprot ID:
+				-{Process:
+					-[(GOid, GOName)]}
+				-{Component:
+					-[(GOid, GOName)]}
+				-{Function:
+					-[(GOid, GOName)]}
+			}
+		}
+	}
 '''
 
 import csv
@@ -83,6 +101,22 @@ def removeGeneID(dic, listToRemove):
 	for k,v in dic.items():
 		if len(v)==0:
 			del dic[k]
+	#ronly leave unique IDs
+	for k,v in dic.items():
+		first_key=v.keys()[0] #save first geneID in genegroup
+		previous_value=v[first_key] 
+		#print values
+		for key,value in v.items():
+			if key != first_key:
+				if value == previous_value:
+					del v[key]
+	'''
+	for key,value in dic.items():
+		print "Group ID: " + str(key)
+		for k,v in value.items():
+			print "Gene ID: " + str(k)
+			print " Gi, ref: " + str(v)'''
+
 	return dic
 
 def parseGFFs(gffdir, filenames, dic):
@@ -104,7 +138,7 @@ def parseGFFs(gffdir, filenames, dic):
 							ref=line[3]
 							for key, value in dic.items():
 								if locusID in value.keys():
-									value[locusID]=(gi, ref)
+									value[locusID]=[gi, ref]
 						except:
 							#no id found! remove from dic!
 							geneIDtoRemove.append(locusID)
@@ -126,6 +160,7 @@ def parseGFFs(gffdir, filenames, dic):
 	return newDic
 
 def printFile(dic):
+	#TODO
 	#printing 3 files: . gi numbers, ref with version and ref w/o version
 
 	#printing GI:
@@ -162,10 +197,7 @@ def printFile(dic):
 
 def retrieveUniprot(dic):
 	#TODO: improve!
-
 	import urllib,urllib2
-
-	print dic
 
 	toPrint_Gi=[]
 	for key, value in dic.items():
@@ -175,6 +207,7 @@ def retrieveUniprot(dic):
 
 	url = 'http://www.uniprot.org/mapping/'
 
+	#retrieve uniparc IDs from GI
 	params = {
 	'from':'P_GI',
 	'to':'ACC',
@@ -188,17 +221,21 @@ def retrieveUniprot(dic):
 	request.add_header('User-Agent', 'Python %s' % contact)
 	response = urllib2.urlopen(request)
 	page = response.read(200000)
-	#print page
 
-	lili=page.split()
-	lala=lili[3::2]
-	#print lala
+	gi_to_uniparc={}
+	toPrint_uniparc=[]
+	line_uniparc=page.split('\n')[1:-1]
+	for item in line_uniparc:
+		item=item.split('\t')
+		gi_to_uniparc[item[0]]=item[1]
+		toPrint_uniparc.append(item[1])
 
+	#Retrieve uniprot IDs from uniparc
 	params2 = {
 	'from':'UPARC',
 	'to':'ACC',
 	'format':'tab',
-	'query':'	'.join(lala)
+	'query':'	'.join(toPrint_uniparc)
 	}
 
 	data2 = urllib.urlencode(params2)
@@ -207,12 +244,26 @@ def retrieveUniprot(dic):
 	request2.add_header('User-Agent', 'Python %s' % contact2)
 	response2 = urllib2.urlopen(request2)
 	page2 = response2.read(200000)
-	#print page2
+	
+	uniparc_to_uniprot={}
+	line_uniprot=page2.split('\n')[1:-1]
+	for item in line_uniprot:
+		item=item.split('\t')
+		uniparc_to_uniprot[item[0]]=item[1]
 
-	uniprot=page2.split()[3::2] #save as list
-	#print uniprot
+	for key, value in dic.items(): #genegroup
+		for k,v in value.items(): #geneID
+			gi_ID=v[0]
+			try:
+				uniprot_dic={}
+				uniparc_ID=gi_to_uniparc[gi_ID]
+				uniprot_ID=uniparc_to_uniprot[uniparc_ID]
+				uniprot_dic[uniprot_ID]=[]
+				v.append(uniprot_dic)
+			except:
+				print "No UniParc or UniProt ID found for gene %s" % (k)
 
-	return uniprot
+	return dic
 
 def getGOnumbers(uniprotIDs):
 	#from the uniprot id list, recovers GOids. returns dict with the list of
@@ -241,9 +292,9 @@ def getGOnumbers(uniprotIDs):
 					values.append((terms[0], terms[2]))
 					listOfTerms[terms[1]]=values
 		listOfGOterms[item]=listOfTerms
-	'''for k,v in listOfGOterms.items():
+	for k,v in listOfGOterms.items():
 		print 'key: ' + k
-		print v'''
+		print v
 	return listOfGOterms
 
 
@@ -293,10 +344,10 @@ def main():
 	#printFile(set_genes)
 
 	#retrieve uniprotKB ids
-	uniprot=retrieveUniprot(set_genes)
+	set_genes_uniprot=retrieveUniprot(set_genes)
 
 	#retrieve GO terms
-	getGOnumbers(uniprot)
+	getGOnumbers(set_genes_uniprot)
 
 
 
