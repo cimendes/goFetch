@@ -297,7 +297,7 @@ def printReport(dic):
 	#TODO - print final report
 
 	with open("report.tsv",'w') as outfile:
-		outfile.write("Gene Group\tNon-unique gene name\tAnnotation\tGene ID\tGI Number\tRef Number\tUniProt ID\t" + \
+		outfile.write("Gene Group\tNon-unique gene name\tAnnotation\tGene ID\tGI Number\tRefSeq Protein Number\tUniProt ID\t" + \
 		"Cellular Component\tBiological Process\tMolecular Function\n")
 
 		for GeneGroupID, general in dic.items():
