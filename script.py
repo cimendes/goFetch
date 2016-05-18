@@ -40,7 +40,7 @@ def detectDelimiter(csvFile):
             return ","
     return ";"
 
-def parseGeneCSVFile(filename):
+def parseInputCSVFile(filename):
 	#Reads csv file with gene information, wither from Roary or Scoary. Gene group id must be in the first col.
 	#Saves gene group ids as key in dictionary.
 	geneGroup={}
@@ -49,7 +49,10 @@ def parseGeneCSVFile(filename):
 		reader = csv.reader(csvfile, delimiter=Delimiter)
 		reader.next()
 		for row in reader:
-			geneGroup[row[0]]=[] #initialize dictionary containing empty list
+			geneGroupID=row[0]
+			annotation=row[1]
+			otherAnnotation=row[2]
+			geneGroup[geneGroupID]=[annotation,otherAnnotation] #initialize dictionary containing annotations
 	return geneGroup
 
 
@@ -68,7 +71,7 @@ def parsePAGeneFile(filename, dic):
 						pass
 					else:
 						temp_dic[item]=[]
-				dic[row[0]]=temp_dic
+				dic[row[0]].append(temp_dic)
 	return dic, filenames
 
 def cleanFilenames(filenames, dic):
@@ -95,21 +98,24 @@ def removeGeneID(dic, listToRemove):
 	#TODO! Verify is it's ok!
 	#remove geneIDs, if groupID is empty, removes that too
 	for k, value in dic.items():
-		for key in value.keys():
+		#print value
+		for key in value[2].keys():
 			if key in listToRemove:
-				del value[key]
+				del value[2][key]
 	for k,v in dic.items():
-		if len(v)==0:
+		if len(v[2])==0:
 			del dic[k]
-	#ronly leave unique IDs
+	#only leave unique IDs
 	for k,v in dic.items():
-		first_key=v.keys()[0] #save first geneID in genegroup
-		previous_value=v[first_key] 
+		#print v
+		first_key=v[2].keys()[0] #save first geneID in genegroup
+		#print first_key
+		previous_value=v[2][first_key] 
 		#print values
-		for key,value in v.items():
+		for key,value in v[2].items():
 			if key != first_key:
 				if value == previous_value:
-					del v[key]
+					del v[2][key]
 	'''
 	for key,value in dic.items():
 		print "Group ID: " + str(key)
@@ -137,27 +143,16 @@ def parseGFFs(gffdir, filenames, dic):
 							gi= line[1]
 							ref=line[3]
 							for key, value in dic.items():
-								if locusID in value.keys():
-									value[locusID]=[gi, ref]
+								if locusID in value[2].keys():
+									value[2][locusID]=[gi, ref]
 						except:
 							#no id found! remove from dic!
 							geneIDtoRemove.append(locusID)
-	'''
-	for key, value in dic.items():
-		print "group ID: " + str(key)
-		for k,v in value.items():
-			print "Gene ID: " + str(k)
-			print v'''
-	#print len(dic)
+	
 	newDic=removeGeneID(dic, geneIDtoRemove) #cleanup!
-	#print len(newDic)
-	'''
-	for key, value in newDic.items():
-		print "group ID: " + str(key)
-		for k,v in value.items():
-			print "Gene ID: " + str(k)
-			print v'''
+	
 	return newDic
+
 
 def printFile(dic):
 	#TODO
@@ -197,19 +192,22 @@ def printFile(dic):
 
 def retrieveUniprot(dic):
 	#TODO: improve!
+	#source: http://www.uniprot.org/help/programmatic_access
 	import urllib,urllib2
 
 	toPrint_Gi=[]
 	for key, value in dic.items():
-		for k,v in value.items():
-			if v[0] not in toPrint_Gi:
-				toPrint_Gi.append(v[0])
+		for k,v in value[2].items():
+			lala=v[1].split('.')[0]
+			#print lala
+			if lala not in toPrint_Gi: #v[0]
+				toPrint_Gi.append(v[0]) #0 - GI
 
 	url = 'http://www.uniprot.org/mapping/'
 
 	#retrieve uniparc IDs from GI
 	params = {
-	'from':'P_GI',
+	'from':'P_GI', #P_GI P_REFSEQ_AC
 	'to':'ACC',
 	'format':'tab',
 	'query':'	'.join(toPrint_Gi)
@@ -252,7 +250,7 @@ def retrieveUniprot(dic):
 		uniparc_to_uniprot[item[0]]=item[1]
 
 	for key, value in dic.items(): #genegroup
-		for k,v in value.items(): #geneID
+		for k,v in value[2].items(): #geneID
 			gi_ID=v[0]
 			try:
 				uniprot_dic={}
@@ -265,7 +263,7 @@ def retrieveUniprot(dic):
 
 	return dic
 
-def getGOnumbers(uniprotIDs):
+def getGOnumbers(dic):
 	#from the uniprot id list, recovers GOids. returns dict with the list of
 	#GO ids for each uniprot id. 
 
@@ -274,38 +272,104 @@ def getGOnumbers(uniprotIDs):
 
 	s = QuickGO() #init QuickGO
 
-	listOfGOterms={}
-	for item in uniprotIDs:
-		#check frmt as dict - saves as unicode
-		result=s.Annotation(protein=str(item),source="UniProt",frmt='tsv',col="goID,aspect,goName")
-		result= result.encode('ascii','ignore').strip() #convert unicode string to regular str
-		#print result
-		goTerm=result.split('\n')[2:]
-		if len(goTerm)>0:
-			listOfTerms={}
-			for terms in goTerm:
-				terms=terms.split('\t')
-				if terms[1] not in listOfTerms:
-					listOfTerms[terms[1]]=[(terms[0], terms[2])]
-				else:
-					values=listOfTerms[terms[1]]
-					values.append((terms[0], terms[2]))
-					listOfTerms[terms[1]]=values
-		listOfGOterms[item]=listOfTerms
-	for k,v in listOfGOterms.items():
-		print 'key: ' + k
-		print v
-	return listOfGOterms
+	for geneGroup,value in dic.items():
+		for geneID, values in value[2].items():
+			for uniprotID, v in values[2].items():
+				#check frmt as dict - saves as unicode
+				result=s.Annotation(protein=str(uniprotID),source="UniProt",frmt='tsv',col="goID,aspect,goName")
+				result= result.encode('ascii','ignore').strip() #convert unicode string to regular str
+				#print result
+				goTerm=result.split('\n')[2:]
+				if len(goTerm)>0:
+					listOfTerms={}
+					for terms in goTerm:
+						terms=terms.split('\t')
+						if terms[1] not in listOfTerms:
+							listOfTerms[terms[1]]=[(terms[0], terms[2])]
+						else:
+							values=listOfTerms[terms[1]]
+							values.append((terms[0], terms[2]))
+							listOfTerms[terms[1]]=values
+				v.append(listOfTerms)
+	return dic
+
+def printReport(dic):
+	#TODO - print final report
+
+	with open("report.tsv",'w') as outfile:
+		outfile.write("Gene Group\tNon-unique gene name\tAnnotation\tGene ID\tGI Number\tRef Number\tUniProt ID\t" + \
+		"Cellular Component\tBiological Process\tMolecular Function\n")
+
+		for GeneGroupID, general in dic.items():
+			geneGroupID=GeneGroupID
+			annotation = general[0]
+			otherAnnotation = general[1]
+			for GeneID, geneInfo in general[2].items():
+				geneID=GeneID
+				giNumber=geneInfo[0]
+				refNumber=geneInfo[1]
+				for UniprotID, geneOntology in geneInfo[2].items():
+					uniprotID=UniprotID
+					component=''
+					process=''
+					function=''
+					for domain in geneOntology:
+						#print domain
+						for domainName, term in domain.items():
+							#print domainName
+							#print term
+							if domainName == 'Component':
+								for touple in term:
+									component+=str(touple[0])+'='+str(touple[1])
+									if touple != term[-1]:
+										component+=';'
+							elif domainName == 'Process':
+								for touple in term:
+									process+=str(touple[0])+'='+str(touple[1])
+									if touple != term[-1]:
+										process+=';'
+							elif domainName == 'Function':
+								for touple in term:
+									function+=str(touple[0])+'='+str(touple[1])
+									if touple != term[-1]:
+										function+=';'
 
 
+					#toPrint=str(domainName)+':'+'"'+str(touple[0])+','+str(touple[1])+'"'
+							#print toPrint
+							#GOID=term[0]
+							#GOName=term[1]
+					outfile.write(geneGroupID+'\t'+annotation+'\t'+otherAnnotation+'\t' + \
+					geneID+'\t'+giNumber+'\t'+refNumber+'\t'+uniprotID+'\t'+component+'\t'+process+'\t'+function+'\n')
+					
+					#print uniprotID
+					#print geneOntology
+					'''
+					for domain, terms in geneOntology:
 
-
-
-
+						outfile.write(geneGroupID+'\t'+annotation+'\t'+otherAnnotation+'\t' + \
+						geneID+'\t'+giNumber+'\t'+refNumber+'\t'+uniprotID+'\t'+domain+'\t'+terms)
+					'''
+		
 
 def main():
 
 	#TODO: Add argparse!
+
+	import argparse
+
+	VERSION=0.9
+
+	parser = argparse.ArgumentParser(description='Gene Ontology fetcher for Roary and Scoary outputs.', epilog='by Catarina Mendes (cimendes@medicina.ulisboa.pt)')
+	parser.add_argument('-g', '--genes', help='Input gene presence/absence table (comma-separated-values) from Roary (https:/sanger-pathogens.github.io/Roary)')
+	parser.add_argument('-i', '--input', help='Input interest gene presence/avsence table (comma or semicolon-separated-values from Roary or Scoary')
+	parser.add_argument('-d', '--dir', help='Path to directory containing all gff files used in the Roary analysis.')
+	#parser.add_argument('--delimiter', help='The delimiter between cells in the gene presence/absence and trait files. NOTE: Even though commas are the default they might mess with the annotation column, and it is therefore recommended to save your files using semicolon or tab ("\t") instead. SCOARY will output files delimited by semicolon', default=',', type=str)
+	#parser.add_argument('--version', help='Display version, and exit.', default=False,action='store_true')
+
+	args = parser.parse_args()
+
+
 
 	#input files
 	pa_file='/home/ines/Dropbox/Tese/roary/roary_ines_n61/gene_presence_absence.csv'
@@ -315,16 +379,16 @@ def main():
 	gffdir='/home/ines/Dropbox/Tese/roary/gff_roary/'
 
 	#parsing 
-	dic_allgenes=parseGeneCSVFile(pa_file)
+	#dic_allgenes=parseInputCSVFile(pa_file)
 	#print len(dic_allgenes)
 	#print dic_allgenes
-	dic_scoary_set=parseGeneCSVFile(scoary_file)
+	dic_scoary_set=parseInputCSVFile(scoary_file)
 	#print len(dic_scoary_set)
 	#print dic_scoary_set
 
 	set_genes, filenames =parsePAGeneFile(pa_file,dic_scoary_set)
 
-	all_genes, filenames=parsePAGeneFile(pa_file,dic_allgenes)
+	#all_genes, filenames=parsePAGeneFile(pa_file,dic_allgenes)
 	'''
 	for key, value in all_genes.items():
 		print "chave: " + str(key)
@@ -341,17 +405,37 @@ def main():
 	set_genes=parseGFFs(gffdir, filenames, set_genes)
 
 	#printing files
-	#printFile(set_genes)
+	#printFile(set_genes) TODO!
 
 	#retrieve uniprotKB ids
 	set_genes_uniprot=retrieveUniprot(set_genes)
 
+	'''
+	for key, value in set_genes_uniprot.items():
+		print "group ID: " + str(key)
+		print "Annotation: " + str(value[0])
+		print "Other Annotation: " + str(value[1])
+		for k,v in value[2].items():
+			print "Gene ID: " + str(k)
+			print v'''
+
 	#retrieve GO terms
-	getGOnumbers(set_genes_uniprot)
+	last_dic=getGOnumbers(set_genes_uniprot)
+	
+	for key, value in set_genes_uniprot.items():
+		print "group ID: " + str(key)
+		print "Annotation: " + str(value[0])
+		print "Other Annotation: " + str(value[1])
+		for k,v in value[2].items():
+			print "Gene ID: " + str(k)
+			print 'GI: ' + str(v[0])
+			print 'Ref: ' + str(v[1])
+			#print 'Uniprot ID: ' + str(v[2])
+			for uniprotID, GOterms in v[2].items():
+				print 'Uniprot ID: ' + str(uniprotID)
+				print GOterms
 
-
-
-
+	printReport(last_dic)
 
 
 if __name__ == "__main__":

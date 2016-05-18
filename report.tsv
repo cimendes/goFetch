@@ -1,0 +1,19 @@
+Gene Group	Non-unique gene name	Annotation	Gene ID	GI Number	Ref Number	UniProt ID	Cellular Component	Biological Process	Molecular Function
+sak		streptokinase [Streptococcus dysgalactiae subsp. equisimilis AC-2713]	SDSE_SD33_01103	410494761	YP_006904607.1	K4Q9P7		GO:0016310=phosphorylation	GO:0016787=hydrolase activity
+group_4440		Internalin-I [Streptococcus dysgalactiae subsp. equisimilis AC-2713]	SDSE_SD34_00212	410495158	YP_006905004.1	K4QA90		GO:0016310=phosphorylation	GO:0016787=hydrolase activity
+group_776		adhesion protein [Streptococcus dysgalactiae subsp. equisimilis GGS_124]	SDSE_SD33_01410	251782978	YP_002997281.1	C5WI52	GO:0016021=integral component of membrane		
+group_776		adhesion protein [Streptococcus dysgalactiae subsp. equisimilis GGS_124]	SDSE_SD35_01707	549702532	YP_008630283.1	U3TS27	GO:0016021=integral component of membrane		
+group_776		adhesion protein [Streptococcus dysgalactiae subsp. equisimilis GGS_124]	SDSE_SD25_01467	408402109	YP_006860073.1	M4ZFK2	GO:0016021=integral component of membrane		
+group_3525		7,8-dihydro-8-oxoguanine triphosphatase [Streptococcus dysgalactiae subsp. equisimilis AC-2713]	SDSE_SD34_00211	410493946	YP_006903792.1	K4Q7R2	GO:0016021=integral component of membrane		
+group_3523		transcriptional regulator, TetR family [Streptococcus dysgalactiae subsp. equisimilis RE378]	SDSE_SD34_00656	408401462	YP_006859425.1	Q1JHF8		GO:0006351=transcription, DNA-templated;GO:0006355=regulation of transcription, DNA-templated	
+group_2765		hypothetical protein [Streptococcus dysgalactiae subsp. equisimilis RE378]	SDSE_SD30_00695	408401156	YP_006859119.1	M4YXA3		GO:0006351=transcription, DNA-templated;GO:0006355=regulation of transcription, DNA-templated	
+group_2765		hypothetical protein [Streptococcus dysgalactiae subsp. equisimilis RE378]	SDSE_SD38_01074	549701370	YP_008629121.1	U3TH22	GO:0016021=integral component of membrane		
+group_2765		hypothetical protein [Streptococcus dysgalactiae subsp. equisimilis RE378]	SDSE_SD37_00113	549701370	YP_008629121.1	U3TH22	GO:0016021=integral component of membrane		
+group_6734		histidine triad protein [Streptococcus dysgalactiae subsp. equisimilis GGS_124]	SDSE_SD31_01092	251782347	YP_002996649.1	C5WGC0	GO:0016021=integral component of membrane		
+group_6733		laminin binding protein [Streptococcus dysgalactiae subsp. equisimilis GGS_124]	SDSE_SD31_01093	251782346	YP_002996648.1	C5WGB9	GO:0016021=integral component of membrane		
+group_6732		esterase [Streptococcus dysgalactiae subsp. equisimilis 167]	SDSE_SD33_00999	549702669	YP_008630420.1	U3TP64	GO:0016021=integral component of membrane		
+group_343		pyruvate oxidase [Streptococcus dysgalactiae subsp. equisimilis GGS_124]	SDSE_SD35_01790	251782605	YP_002996908.1	C5WH29	GO:0016021=integral component of membrane		
+group_343		pyruvate oxidase [Streptococcus dysgalactiae subsp. equisimilis GGS_124]	SDSE_SD27_01026	410494878	YP_006904724.1	K4Q9M4		GO:0055114=oxidation-reduction process	GO:0047112=pyruvate oxidase activity
+group_343		pyruvate oxidase [Streptococcus dysgalactiae subsp. equisimilis GGS_124]	SDSE_SD31_01695	410494878	YP_006904724.1	K4Q9M4		GO:0055114=oxidation-reduction process	GO:0047112=pyruvate oxidase activity
+group_6731		copper-exporting ATPase [Streptococcus dysgalactiae subsp. equisimilis RE378]	SDSE_SD31_00698	408402245	YP_006860209.1	M4YZH1	GO:0005886=plasma membrane;GO:0016020=membrane;GO:0016021=integral component of membrane		GO:0016787=hydrolase activity
+group_4439		streptodornase D type [Streptococcus dysgalactiae subsp. equisimilis RE378]	SDSE_SD34_00657	408401207	YP_006859170.1	M4YX17			GO:0016787=hydrolase activity
