@@ -350,7 +350,6 @@ def main():
 	parser.add_argument('-g', '--genes', help='Input gene presence/absence table (comma-separated-values) from Roary (https:/sanger-pathogens.github.io/Roary)')
 	parser.add_argument('-i', '--input', help='Input interest gene presence/avsence table (comma or semicolon-separated-values from Roary or Scoary')
 	parser.add_argument('-d', '--gffdir', help='Path to directory containing all gff files used in the Roary analysis.')
-	#parser.add_argument('--delimiter', help='The delimiter between cells in the gene presence/absence and trait files. NOTE: Even though commas are the default they might mess with the annotation column, and it is therefore recommended to save your files using semicolon or tab ("\t") instead. SCOARY will output files delimited by semicolon', default=',', type=str)
 	parser.add_argument('--version', help='Display version, and exit.', default=False,action='store_true')
 
 	args = parser.parse_args()
