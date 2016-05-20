@@ -348,7 +348,7 @@ def main():
 
 	parser = argparse.ArgumentParser(description='Gene Ontology fetcher for Roary and Scoary outputs.', epilog='by Catarina Mendes (cimendes@medicina.ulisboa.pt)')
 	parser.add_argument('-g', '--genes', help='Input gene presence/absence table (comma-separated-values) from Roary (https:/sanger-pathogens.github.io/Roary)')
-	parser.add_argument('-i', '--input', help='Input interest gene presence/avsence table (comma or semicolon-separated-values from Roary or Scoary')
+	parser.add_argument('-i', '--input', help='Input interest gene presence/absence table (comma or semicolon-separated-values from Roary or Scoary')
 	parser.add_argument('-d', '--gffdir', help='Path to directory containing all gff files used in the Roary analysis.')
 	parser.add_argument('--version', help='Display version, and exit.', default=False,action='store_true')
 
