@@ -87,18 +87,17 @@ def cleanFilenames(filenames, dic):
 			if fname not in fnames:
 				fnames.append(fname)
 	finalList=[]
-	for lala in filenames:
-		realName=item.split('_')
+	for pos in filenames:
+		realName=pos.split('_')
 		realName='_'.join(realName[:-1])
 		for name in fnames:
-			if fname == realName and lala not in finalList:
-				finalList.append(lala)
+			if fname == realName and pos not in finalList:
+				finalList.append(pos)
 	return finalList
 
 def removeGeneID(dic, listToRemove):
 	#remove geneIDs, if groupID is empty, removes that too
 	for k, value in dic.items():
-		#print value
 		for key in value[2].keys():
 			if key in listToRemove:
 				del value[2][key]
@@ -107,11 +106,8 @@ def removeGeneID(dic, listToRemove):
 			del dic[k]
 	#only leave unique IDs
 	for k,v in dic.items():
-		#print v
 		first_key=v[2].keys()[0] #save first geneID in genegroup
-		#print first_key
 		previous_value=[v[2][first_key]]
-		#print values
 		for key,value in v[2].items():
 			if key != first_key:
 				if value in previous_value:
@@ -127,10 +123,8 @@ def parseGFFs(gffdir, filenames, dic):
 	for item in filenames:
 		with open(gffdir+item+'.gff', 'r') as gffFile:
 			for line in gffFile:
-				#if line.startswith('gnl'):
 				if not line.startswith('##'):
 					if line.startswith('gnl') or line.startswith('NZ') or line.startswith('gi'):
-						#print line
 						line=line.split('\t')
 						line=line[-1].split(';')
 						locusID=str(line[0].split('=')[1])
@@ -192,8 +186,6 @@ def printFile(dic):
 def retrieveUniprot(dic):
 	#source: http://www.uniprot.org/help/programmatic_access
 	import urllib,urllib2
-
-	#print dic
 
 	toPrint_Gi=[]
 	for key, value in dic.items():
@@ -260,7 +252,6 @@ def retrieveUniprot(dic):
 				print "No UniParc or UniProt ID found for gene %s. Being removed from analysis." % (k)
 				del value[2][k] #removing 
 
-	
 	return dic
 
 def getGOnumbers(dic):
