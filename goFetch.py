@@ -1,14 +1,16 @@
 '''
-Script for obtaining gene IDs from gene groups obtained in scoary output.
+Gene Ontology fetcher for Roary and Scoary outputs
+Idea and implementation: Catarina Mendes (cimendes@medicina.ulisboa.pt)
 
 input:  gene_presence_absence.csv file from roary
-		scoary output csv file for the genes of interest, otherwise it will perfom 
-		analysis for all group genes in roary csv
-output: txt file with geneId to be used in DAVID
+		scoary output csv file for the genes of interest or gene_presence_absence.csv file from roary
+		Path to directory containing all gff files used in the Roary analysis
+output: tsv file containing gene information, GI number, RefSeq Protein Number, Uniprot ID and Gene
+		ontology terms found for Cellular Component, Biological Process and Molecular Function
+		For each genegroup it only saves unique IDs
 
 requires: bioservices, internet connection
 
-For each genegroup it only saves unique ids
 
 Dictionary Structure:
 	{GeneGroup:
@@ -75,7 +77,6 @@ def parsePAGeneFile(filename, dic):
 	return dic, filenames
 
 def cleanFilenames(filenames, dic):
-	#TODO: not sure if necessary
 	#Cleans not needed filenames
 	fnames=[]
 	for key,value in dic.items():
@@ -95,7 +96,6 @@ def cleanFilenames(filenames, dic):
 	return finalList
 
 def removeGeneID(dic, listToRemove):
-	#TODO! Verify is it's ok!
 	#remove geneIDs, if groupID is empty, removes that too
 	for k, value in dic.items():
 		#print value
@@ -154,7 +154,7 @@ def parseGFFs(gffdir, filenames, dic):
 
 
 def printFile(dic):
-	#TODO
+	#Not implemented
 	#printing 3 files: . gi numbers, ref with version and ref w/o version
 
 	#printing GI:
@@ -190,7 +190,6 @@ def printFile(dic):
 			fileRef.write(str(item) + '\n')
 
 def retrieveUniprot(dic):
-	#TODO: improve!
 	#source: http://www.uniprot.org/help/programmatic_access
 	import urllib,urllib2
 
@@ -340,11 +339,9 @@ def printReport(dic):
 
 def main():
 
-	#TODO: Add argparse!
-
 	import argparse, os, sys
 
-	version=0.9
+	version=1.0
 
 	parser = argparse.ArgumentParser(description='Gene Ontology fetcher for Roary and Scoary outputs.', epilog='by Catarina Mendes (cimendes@medicina.ulisboa.pt)')
 	parser.add_argument('-g', '--genes', help='Input gene presence/absence table (comma-separated-values) from Roary (https:/sanger-pathogens.github.io/Roary)')
