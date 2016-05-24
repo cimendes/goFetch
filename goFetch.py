@@ -29,8 +29,26 @@ Dictionary Structure:
 	}
 '''
 
-import csv
-import os
+import csv, os, argparse, sys, unicodedata, time
+from bioservices import QuickGO
+
+# Redirect stdout
+# Modified from:
+# http://stackoverflow.com/questions/14906764/how-to-redirect-stdout-to-both-file-and-console-with-scripting
+class Logger(object):
+	def __init__(self, out_directory):
+		self.logfile = os.path.join(out_directory, "run.log")
+		if os.path.isfile(self.logfile):
+			print "Logfile already exists! It will be overwritten..." + "\n"
+		self.terminal = sys.stdout
+		self.log = open(self.logfile, "w")
+	def write(self, message):
+		self.terminal.write(message)
+		self.log.write(message)
+		self.log.flush()
+	def flush(self):
+		pass
+
 
 def detectDelimiter(csvFile):
 	#detect file delimiter, ',' or ';'
@@ -71,6 +89,10 @@ def parsePAGeneFile(filename, dic):
 					#check if item is empty, only saves non-empty ids
 					if item == '':
 						pass
+					elif '\t' in item: #in case of paralogs
+						item=item.split('\t')
+						for geneID in item:
+							temp_dic[geneID]=[]
 					else:
 						temp_dic[item]=[]
 				dic[row[0]].append(temp_dic)
@@ -187,6 +209,7 @@ def retrieveUniprot(dic):
 	#source: http://www.uniprot.org/help/programmatic_access
 	import urllib,urllib2
 
+	badID_genes=[]
 	toPrint_Gi=[]
 	for key, value in dic.items():
 		for k,v in value[2].items():
@@ -250,18 +273,17 @@ def retrieveUniprot(dic):
 				v.append(uniprot_dic)
 			except:
 				print "No UniParc or UniProt ID found for gene %s. Being removed from analysis." % (k)
+				badID_genes.append(k)
 				del value[2][k] #removing 
 
-	return dic
+	return dic,badID_genes
 
 def getGOnumbers(dic):
 	#from the uniprot id list, recovers GOids. returns dict with the list of
 	#GO ids for each uniprot id. 
 
-	from bioservices import QuickGO
-	import unicodedata
-
 	s = QuickGO() #init QuickGO
+	noGO=[]
 
 	for geneGroup,value in dic.items():
 		for geneID, values in value[2].items():
@@ -282,13 +304,25 @@ def getGOnumbers(dic):
 							listOfTerms[terms[1]]=values
 				else:
 					print "No Gene Ontology terms found for %s" % geneID
+					noGO.append(geneID)
 				v.append(listOfTerms)
-	return dic
+	return dic,noGO
+
+def badResultsReport(badID,badGO):
+
+	with open("failReport"+time.strftime("_%d_%m_%Y_%H%M")+".txt",'w') as failReport:
+		failReport.write("No UniParc or UniProt ID found:\n")
+		for geneID1 in badID:
+			failReport.write(str(geneID1)+'\n')
+		failReport.write('\n')
+		failReport.write("No Gene Ontology terms found:\n")
+		for geneID2 in badGO:
+			failReport.write(str(geneID2)+'\n')
 
 def printReport(dic):
 	#Method to print the tsv report file.
 
-	with open("report.tsv",'w') as outfile:
+	with open("report"+time.strftime("_%d_%m_%Y_%H%M")+".tsv",'w') as outfile:
 		outfile.write("Gene Group\tNon-unique gene name\tAnnotation\tGene ID\tGI Number\tRefSeq Protein Number\tUniProt ID\t" + \
 		"Cellular Component\tBiological Process\tMolecular Function\n")
 
@@ -330,9 +364,7 @@ def printReport(dic):
 
 def main():
 
-	import argparse, os, sys
-
-	version=1.0
+	version=1.1
 
 	parser = argparse.ArgumentParser(description='Gene Ontology fetcher for Roary and Scoary outputs.', epilog='by Catarina Mendes (cimendes@medicina.ulisboa.pt)')
 	parser.add_argument('-g', '--genes', help='Input gene presence/absence table (comma-separated-values) from Roary (https:/sanger-pathogens.github.io/Roary)')
@@ -358,6 +390,10 @@ def main():
 			print "error: argument -d/--gffdir is required"
 		sys.exit(1)
 
+	start_time = time.time()
+
+	sys.stdout = Logger("./")
+
 	#Reading files
 	print "Reading input file."
 	input_file=parseInputCSVFile(args.input)
@@ -369,15 +405,23 @@ def main():
 	input_genes=parseGFFs(args.gffdir,filenames,input_genes)
 
 	print "Retrieving Uniprot IDs."
-	input_genes=retrieveUniprot(input_genes)
+	input_genes,badID=retrieveUniprot(input_genes)
 
 	print "Retrieving Gene Ontology terms."
-	input_genes=getGOnumbers(input_genes)
+	input_genes,noGO=getGOnumbers(input_genes)
 
 	print "Printing final report."
 	printReport(input_genes)
+	badResultsReport(badID,noGO)
 
-	sys.exit("Finished")
+	end_time = time.time()
+	time_taken = end_time - start_time
+	hours, rest = divmod(time_taken,3600)
+	minutes, seconds = divmod(rest, 60)
+	print "Runtime :" + str(hours) + "h:" + str(minutes) + "m:" + str(round(seconds, 2)) + "s" + "\n"
+
+	print "Finished"
+	sys.exit(0)
 
 if __name__ == "__main__":
     main()

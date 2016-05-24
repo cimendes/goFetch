@@ -3,6 +3,14 @@ Gene Ontology fetcher for Roary and Scoary outputs.
 
 It's designed to take the gene_presence_absence.csv file from [Roary] (https://sanger-pathogens.github.io/Roary/), a gene input csv file obtained from Roary or [Scoary] (https://github.com/AdmiralenOla/Scoary) and the path to the directory containing the GFF files used in the Roary analysis, reporting a list of the input genes with information on IDs and Gene Ontology terms found.
 
+## Updates:
+
+	Current release - v1.1 
+
+	- Fixed bug related to the presence of paralog genes in the gene_presence_absence.csv file from Roary.
+	- Printing a report for the geneIDs for which the script couldn't retrieve UniprotID or	any Gene Ontology terms.
+	- Printing log file.
+
 ## Usage
 
     goFetch.py -g gene_presence_absence.csv -i genes_file.csv -d '/path/to/GFF/files/'

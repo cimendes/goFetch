@@ -1,0 +1,16 @@
+Reading input file.
+Reading gene file.
+Parsing GFF files.
+Retrieving Uniprot IDs.
+Retrieving Gene Ontology terms.
+No Gene Ontology terms found for SDSE_SD34_00212
+No Gene Ontology terms found for SDSE_SD34_00211
+No Gene Ontology terms found for SDSE_SD30_00695
+No Gene Ontology terms found for SDSE_SD31_01092
+No Gene Ontology terms found for SDSE_SD31_01093
+No Gene Ontology terms found for SDSE_SD33_00999
+No Gene Ontology terms found for SDSE_SD35_01790
+Printing final report.
+Runtime :0.0h:0.0m:16.45s
+
+Finished
