@@ -88,7 +88,7 @@ def parsePAGeneFile(filename, dic):
 				for item in row[14:]:
 					#check if item is empty, only saves non-empty ids
 					if item == '':
-						pass
+						continue
 					elif '\t' in item: #in case of paralogs
 						item=item.split('\t')
 						for geneID in item:
@@ -125,6 +125,7 @@ def removeGeneID(dic, listToRemove):
 				del value[2][key]
 	for k,v in dic.items():
 		if len(v[2])==0:
+			print "No IDs found. Group ID removed: " + str(k) 
 			del dic[k]
 	#only leave unique IDs
 	for k,v in dic.items():
@@ -163,6 +164,7 @@ def parseGFFs(gffdir, filenames, dic):
 							except:
 								#no id found! remove from dic!
 								geneIDtoRemove.append(locusID)
+								#print 'No Id found! Removing.. ' +str(locusID)
 
 	newDic=removeGeneID(dic, geneIDtoRemove) #cleanup!
 	
@@ -274,7 +276,9 @@ def retrieveUniprot(dic):
 			except:
 				print "No UniParc or UniProt ID found for gene %s. Being removed from analysis." % (k)
 				badID_genes.append(k)
-				del value[2][k] #removing 
+				del value[2][k] #removing
+				if len(value[2])==0:
+					print "No IDs found. Removed Gene Group ID: %s" % (key) 
 
 	return dic,badID_genes
 
@@ -323,7 +327,7 @@ def printReport(dic):
 	#Method to print the tsv report file.
 
 	with open("report"+time.strftime("_%d_%m_%Y_%H%M")+".tsv",'w') as outfile:
-		outfile.write("Gene Group\tNon-unique gene name\tAnnotation\tGene ID\tGI Number\tRefSeq Protein Number\tUniProt ID\t" + \
+		outfile.write("Gene Group\tNon-unique gene name\tAnnotation\tUnique Gene ID\tUnique GI Number\tUnique RefSeq Protein Number\tUnique UniProt ID\t" + \
 		"Cellular Component\tBiological Process\tMolecular Function\n")
 
 		for GeneGroupID, general in dic.items():
@@ -359,7 +363,6 @@ def printReport(dic):
 
 					outfile.write(geneGroupID+'\t'+annotation+'\t'+otherAnnotation+'\t' + \
 					geneID+'\t'+giNumber+'\t'+refNumber+'\t'+uniprotID+'\t'+component+'\t'+process+'\t'+function+'\n')
-					
 		
 
 def main():
