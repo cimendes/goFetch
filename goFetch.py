@@ -147,7 +147,7 @@ def parseGFFs(gffdir, filenames, dic):
 		with open(gffdir+item+'.gff', 'r') as gffFile:
 			for line in gffFile:
 				if not line.startswith('##'):
-					if line.startswith('gnl') or line.startswith('NZ') or line.startswith('gi'):
+					if line.startswith('gnl') or line.startswith('NZ') or line.startswith('gi') or line.startswith('MA') or line.startswith('MC') or line.startswith('MAT'):
 						line=line.split('\t')
 						line=line[-1].split(';')
 						locusID=str(line[0].split('=')[1])
@@ -215,9 +215,16 @@ def retrieveUniprot(dic):
 	toPrint_Gi=[]
 	for key, value in dic.items():
 		for k,v in value[2].items():
-			GI_ID=v[1].split('.')[0]
-			if GI_ID not in toPrint_Gi: #v[0]
-				toPrint_Gi.append(v[0]) #0 - GI
+			#print k
+			#print v
+			#print v[1]
+			try:
+				GI_ID=v[1].split('.')[0]
+				if GI_ID not in toPrint_Gi: #v[0]
+					toPrint_Gi.append(v[0]) #0 - GI
+			except:
+				print k
+				print v
 
 	url = 'http://www.uniprot.org/mapping/'
 
@@ -266,7 +273,11 @@ def retrieveUniprot(dic):
 
 	for key, value in dic.items(): #genegroup
 		for k,v in value[2].items(): #geneID
-			gi_ID=v[0]
+			try:
+				gi_ID=v[0]
+			except:
+				print k
+				print v
 			try:
 				uniprot_dic={}
 				uniparc_ID=gi_to_uniparc[gi_ID]
