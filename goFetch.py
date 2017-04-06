@@ -140,10 +140,56 @@ def removeGeneID(dic, listToRemove):
 
 	return dic
 
+def parseFeatures(tempGFF, gffFeatures):
+	#parsing the feature file into a dictionary
+	geneIDtoRemove=[]
+
+	with open(tempGFF, 'r') as temp_genes:
+		for line in temp_genes:
+			line=line.split('\t')
+			if "CDS" in line[2]:
+				ID=line[-1].split(';')
+				locusID=str(ID[0].split('=')[1])
+				try:
+					ID_info=ID[2].split('|')
+					gi= ID_info[1]
+					ref=ID_info[3]
+					for key, value in gffFeatures.items():
+						if locusID in value[2].keys():
+							value[2][locusID]=[gi, ref]
+				except:
+					#no id found! remove from dic!
+					geneIDtoRemove.append(locusID)
+
+	return gffFeatures, geneIDtoRemove
+
+
 def parseGFFs(gffdir, filenames, dic):
 	#parse gff files. Requires directory containing the gff files
 	geneIDtoRemove=[]
+
+	outputDir=os.getcwd()
+
+	#separating the gff into 2 different files: one with the features and another with the conting sequences
 	for item in filenames:
+		print '\t'+item
+		#cleaning temp files if they exist
+		if os.path.isfile(outputDir+'/'+item+'_features.gff'):
+			os.remove(outputDir+'/'+item+'_features.gff')
+
+		with open(gffdir+item+'.gff', 'r') as in_handle, open(outputDir+'/'+item+'_features.gff', 'a') as temp_genes:
+			for line in in_handle: 
+				if not line.startswith('##'):
+					if '\t' in line:
+						temp_genes.write(line)
+
+		dic, geneIDtoRemove_file=parseFeatures(outputDir+'/'+item+'_features.gff', dic)
+		
+		geneIDtoRemove=geneIDtoRemove+geneIDtoRemove_file
+
+		os.remove(outputDir+'/'+item+'_features.gff')
+
+	'''for item in filenames:
 		with open(gffdir+item+'.gff', 'r') as gffFile:
 			for line in gffFile:
 				if not line.startswith('##'):
@@ -165,7 +211,7 @@ def parseGFFs(gffdir, filenames, dic):
 								#no id found! remove from dic!
 								geneIDtoRemove.append(locusID)
 								#print 'No Id found! Removing.. ' +str(locusID)
-
+	'''
 	newDic=removeGeneID(dic, geneIDtoRemove) #cleanup!
 	
 	return newDic
